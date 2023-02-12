@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset TestUsers_sql:1
+--changeset TestUsers_sql:12
 
 CREATE SCHEMA task_tracker;
 
@@ -50,10 +50,9 @@ ALTER TABLE task_tracker.category_task ADD COLUMN  execution_date DATE NOT NULL;
 ALTER TABLE task_tracker.task ADD COLUMN  execution_date DATE NOT NULL;
 
 
-ALTER TABLE task_tracker.category_task  ADD COLUMN  customer_code INTEGER NOT NULL;
-ALTER TABLE task_tracker.task  ADD COLUMN  category_code INTEGER NOT NULL;
-
-ALTER TABLE task_tracker.task  ADD COLUMN  customer_code INTEGER NOT NULL;
+ALTER TABLE task_tracker.category_task  ADD COLUMN  customer_code INTEGER;
+ALTER TABLE task_tracker.task  ADD COLUMN  category_code INTEGER;
+ALTER TABLE task_tracker.task  ADD COLUMN  customer_code INTEGER;
 
 ALTER TABLE task_tracker.task
 ADD COLUMN customer_id INT,

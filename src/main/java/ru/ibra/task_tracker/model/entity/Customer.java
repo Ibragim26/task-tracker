@@ -1,10 +1,7 @@
-package ru.ibra.task_tracker.model;
+package ru.ibra.task_tracker.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.PackagePrivate;
 
 import javax.persistence.*;
@@ -16,6 +13,7 @@ import java.util.List;
 @PackagePrivate
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(schema = "task_tracker", name = "customer")
 public class Customer {
 
@@ -35,10 +33,10 @@ public class Customer {
     String password;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Category> categories;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Task> tasks;
 }

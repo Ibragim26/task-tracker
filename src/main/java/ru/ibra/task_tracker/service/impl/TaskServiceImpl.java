@@ -2,13 +2,20 @@ package ru.ibra.task_tracker.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import ru.ibra.task_tracker.model.Task;
+import ru.ibra.task_tracker.model.entity.Task;
+import ru.ibra.task_tracker.model.constant.Priority;
+import ru.ibra.task_tracker.model.constant.Status;
+import ru.ibra.task_tracker.model.exception.CategoryNotFoundException;
+import ru.ibra.task_tracker.model.exception.CustomerNotFoundException;
+import ru.ibra.task_tracker.model.exception.TaskNotFoundException;
 import ru.ibra.task_tracker.repo.CategoryRepo;
 import ru.ibra.task_tracker.repo.CustomerRepo;
 import ru.ibra.task_tracker.repo.TaskRepo;
 import ru.ibra.task_tracker.service.TaskService;
+import ru.ibra.task_tracker.util.MessageFormatUtil;
+
+import java.util.Date;
 
 @RequiredArgsConstructor
 @Service
@@ -31,17 +38,27 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task createTask(Task task) {
-        if (categoryRepo.findById(task.getCategoryCode()).isEmpty()) {
+    public Task createTask(Task task) throws IllegalStateException, CategoryNotFoundException, CustomerNotFoundException {
+        if (task.getId() != null && taskRepo.findById(task.getId()).isPresent()){
+            log.debug(String.format("You cannot update full entity, id = %s", task.getId()));
+            throw new IllegalStateException(String.format("You cannot update full entity, id = %s", task.getId()));
+        }
+        if (task.getCategoryCode() != null && categoryRepo.findById(task.getCategoryCode()).isEmpty()) {
             log.debug(String.format("При сохранении/обновлении таски не получилось найти категории по id = %s", task.getCategoryCode()));
-            return null;
+            throw new CategoryNotFoundException(MessageFormatUtil.notFound("Category", task.getCategoryCode().toString()));
         }
-        if (customerRepo.findById(task.getCustomerCode()).isEmpty()) {
+        if (task.getCustomerCode() != null && customerRepo.findById(task.getCustomerCode()).isEmpty()) {
             log.debug(String.format("При сохранении/обновлении таски не получилось найти пользователя по id = %s", task.getCustomerCode()));
-            return null;
+            throw new CustomerNotFoundException(MessageFormatUtil.notFound("Customer", task.getCustomerCode().toString()));
         }
-        task.setCategory(categoryRepo.findById(task.getCategoryCode()).get());
-        task.setCustomer(customerRepo.findById(task.getCustomerCode()).get());
+        task.setCreateDate(new Date());
+        task.setUpdateDate(new Date());
+        task.setCategoryCode(task.getCategoryCode());
+        task.setCustomerCode(task.getCustomerCode());
+        if (task.getCategoryCode() != null)
+            task.setCategory(categoryRepo.findById(task.getCategoryCode()).get());
+        if (task.getCustomerCode() != null)
+            task.setCustomer(customerRepo.findById(task.getCustomerCode()).get());
         return taskRepo.save(task);
     }
 
@@ -53,5 +70,31 @@ public class TaskServiceImpl implements TaskService {
         }
         taskRepo.delete(taskRepo.findById(id).get());
         return id;
+    }
+
+    @Override
+    public Boolean changeTaskStatus(Long id, Status status) throws TaskNotFoundException {
+        Task task;
+        if (taskRepo.findById(id).isEmpty()){
+            log.debug(MessageFormatUtil.notFound("Task", id.toString()));
+            throw new TaskNotFoundException(MessageFormatUtil.notFound("Task", id.toString()));
+        }
+        task = taskRepo.findById(id).get();
+        task.setStatus(status);
+        task.setUpdateDate(new Date());
+        return true;
+    }
+
+    @Override
+    public Boolean setTaskPrior(Long id, Priority priority) throws TaskNotFoundException {
+        Task task;
+        if (taskRepo.findById(id).isEmpty()){
+            log.debug(MessageFormatUtil.notFound("Task", id.toString()));
+            throw new TaskNotFoundException(MessageFormatUtil.notFound("Task", id.toString()));
+        }
+        task = taskRepo.findById(id).get();
+        task.setTaskPriority(priority);
+        task.setUpdateDate(new Date());
+        return true;
     }
 }
